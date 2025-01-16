@@ -4,22 +4,32 @@ export async function handleListPages(client, args) {
         if (!args.spaceId) {
             throw new McpError(ErrorCode.InvalidParams, "spaceId is required");
         }
-        const pages = await client.getPages(args.spaceId, args.limit, args.start);
+        const pages = await client.getPages(args.spaceId, {
+            limit: args.limit,
+            cursor: args.cursor,
+            sort: args.sort,
+            status: args.status
+        });
         const simplified = {
             results: pages.results.map(page => ({
                 id: page.id,
                 title: page.title,
                 spaceId: page.spaceId,
                 version: page.version.number,
-                parentId: page.parentId || null
+                parentId: page.parentId || null,
+                status: page.status.value,
+                _links: page._links
             })),
-            next: pages._links.next ? true : false
+            cursor: pages._links.next?.split('cursor=')[1],
+            limit: pages.limit,
+            size: pages.size,
+            hasMore: !!pages._links.next
         };
         return {
             content: [
                 {
                     type: "text",
-                    text: JSON.stringify(simplified),
+                    text: JSON.stringify(simplified, null, 2),
                 },
             ],
         };
@@ -35,21 +45,21 @@ export async function handleGetPage(client, args) {
             throw new McpError(ErrorCode.InvalidParams, "pageId is required");
         }
         const page = await client.getPage(args.pageId);
-        const content = await client.getPageContent(args.pageId);
         const simplified = {
             id: page.id,
             title: page.title,
             spaceId: page.spaceId,
             version: page.version.number,
             parentId: page.parentId || null,
-            content: content,
+            content: page.body.storage,
+            status: page.status.value,
             url: page._links.webui
         };
         return {
             content: [
                 {
                     type: "text",
-                    text: JSON.stringify(simplified),
+                    text: JSON.stringify(simplified, null, 2),
                 },
             ],
         };
@@ -70,14 +80,16 @@ export async function handleCreatePage(client, args) {
         const page = await client.createPage(args.spaceId, args.title, args.content, args.parentId);
         const simplified = {
             id: page.id,
+            title: page.title,
             version: page.version.number,
+            status: page.status.value,
             url: page._links.webui
         };
         return {
             content: [
                 {
                     type: "text",
-                    text: JSON.stringify(simplified),
+                    text: JSON.stringify(simplified, null, 2),
                 },
             ],
         };
@@ -98,14 +110,16 @@ export async function handleUpdatePage(client, args) {
         const page = await client.updatePage(args.pageId, args.title, args.content, args.version);
         const simplified = {
             id: page.id,
+            title: page.title,
             version: page.version.number,
+            status: page.status.value,
             url: page._links.webui
         };
         return {
             content: [
                 {
                     type: "text",
-                    text: JSON.stringify(simplified),
+                    text: JSON.stringify(simplified, null, 2),
                 },
             ],
         };

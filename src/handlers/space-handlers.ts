@@ -4,12 +4,16 @@ import type { Space, PaginatedResponse } from "../types/index.js";
 
 export async function handleListSpaces(
   client: ConfluenceClient,
-  args: { limit?: number; start?: number }
+  args: {
+    limit?: number;
+    cursor?: string;
+    sort?: 'name' | '-name' | 'key' | '-key';
+  }
 ): Promise<{
   content: Array<{ type: "text"; text: string }>;
 }> {
   try {
-    const spaces = await client.getSpaces(args.limit, args.start);
+    const spaces = await client.getSpaces(args);
     // Transform to minimal format
     const simplified = {
       results: spaces.results.map(space => ({

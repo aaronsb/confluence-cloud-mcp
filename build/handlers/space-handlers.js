@@ -1,7 +1,7 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 export async function handleListSpaces(client, args) {
     try {
-        const spaces = await client.getSpaces(args.limit, args.start);
+        const spaces = await client.getSpaces(args);
         // Transform to minimal format
         const simplified = {
             results: spaces.results.map(space => ({

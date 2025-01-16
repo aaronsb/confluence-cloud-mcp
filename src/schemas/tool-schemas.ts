@@ -1,4 +1,13 @@
-export const toolSchemas = {
+interface ToolSchema {
+  description: string;
+  inputSchema: {
+    type: "object";
+    properties: Record<string, unknown>;
+    required?: string[];
+  };
+}
+
+export const toolSchemas: Record<string, ToolSchema> = {
   list_spaces: {
     description: "List all spaces in Confluence",
     inputSchema: {
@@ -6,11 +15,16 @@ export const toolSchemas = {
       properties: {
         limit: {
           type: "number",
-          description: "Maximum number of spaces to return (default: 25)",
+          description: "Maximum number of spaces to return (default: 25, max: 250)",
         },
-        start: {
-          type: "number",
-          description: "Starting index for pagination (default: 0)",
+        cursor: {
+          type: "string",
+          description: "Cursor for pagination, obtained from _links.next",
+        },
+        sort: {
+          type: "string",
+          enum: ["name", "-name", "key", "-key"],
+          description: "Sort spaces by field (prefix with - for descending)",
         },
       },
     },
@@ -41,11 +55,21 @@ export const toolSchemas = {
         },
         limit: {
           type: "number",
-          description: "Maximum number of pages to return (default: 25)",
+          description: "Maximum number of pages to return (default: 25, max: 250)",
         },
-        start: {
-          type: "number",
-          description: "Starting index for pagination (default: 0)",
+        cursor: {
+          type: "string",
+          description: "Cursor for pagination, obtained from _links.next",
+        },
+        sort: {
+          type: "string",
+          enum: ["created-date", "-created-date", "modified-date", "-modified-date", "title", "-title"],
+          description: "Sort pages by field (prefix with - for descending)",
+        },
+        status: {
+          type: "string",
+          enum: ["current", "archived", "draft", "trashed"],
+          description: "Filter pages by status",
         },
       },
       required: ["spaceId"],
@@ -119,24 +143,28 @@ export const toolSchemas = {
   },
 
   search_content: {
-    description: "Search Confluence content using CQL",
+    description: "Search Confluence content using v1 search API with CQL",
     inputSchema: {
       type: "object",
       properties: {
-        query: {
+        cql: {
           type: "string",
-          description: "CQL query string",
+          description: "CQL query string (e.g. 'text ~ \"search term\"')",
         },
         limit: {
           type: "number",
           description: "Maximum number of results to return (default: 25)",
         },
-        start: {
-          type: "number",
-          description: "Starting index for pagination (default: 0)",
+        cursor: {
+          type: "string",
+          description: "Start index for pagination",
         },
+        'space-id': {
+          type: "string",
+          description: "Filter results to a specific space",
+        }
       },
-      required: ["query"],
+      required: ["cql"],
     },
   },
 
@@ -155,20 +183,25 @@ export const toolSchemas = {
   },
 
   add_label: {
-    description: "Add a label to a page",
+    description: "Add a label to content using Confluence v1 API",
     inputSchema: {
       type: "object",
       properties: {
-        pageId: {
+        contentId: {
           type: "string",
-          description: "ID of the page",
+          description: "ID of the content to add the label to"
         },
-        label: {
+        prefix: {
           type: "string",
-          description: "Label to add",
+          description: "Label prefix (should be 'global')",
+          enum: ["global"]
         },
+        name: {
+          type: "string",
+          description: "Name of the label to add"
+        }
       },
-      required: ["pageId", "label"],
+      required: ["contentId", "prefix", "name"],
     },
   },
 

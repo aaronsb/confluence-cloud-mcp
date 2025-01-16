@@ -4,23 +4,31 @@ import type { Label, SearchResult } from "../types/index.js";
 
 export async function handleSearchContent(
   client: ConfluenceClient,
-  args: { query: string; limit?: number; start?: number }
+  args: {
+    cql: string;
+    limit?: number;
+    cursor?: string;
+  }
 ): Promise<{
   content: Array<{ type: "text"; text: string }>;
 }> {
   try {
-    if (!args.query) {
-      throw new McpError(ErrorCode.InvalidParams, "query is required");
+    if (!args.cql) {
+      throw new McpError(ErrorCode.InvalidParams, "cql is required");
     }
 
-    const results = await client.searchContent(args.query, args.limit, args.start);
+    const results = await client.searchContentV1(args.cql, {
+      limit: args.limit,
+      start: args.cursor ? parseInt(args.cursor, 10) : 0
+    });
     const simplified = {
       results: results.results.map(result => ({
         id: result.content.id,
         title: result.content.title,
-        type: result.content.type,
-        url: result.url,
-        excerpt: result.excerpt || null
+        spaceId: result.content.space.id,
+        spaceKey: result.content.space.key,
+        version: result.content.version,
+        url: result.content._links.webui
       })),
       next: results._links.next ? true : false
     };
@@ -79,19 +87,26 @@ export async function handleGetLabels(
 
 export async function handleAddLabel(
   client: ConfluenceClient,
-  args: { pageId: string; label: string }
+  args: { contentId: string; prefix: string; name: string }
 ): Promise<{
   content: Array<{ type: "text"; text: string }>;
 }> {
   try {
-    if (!args.pageId || !args.label) {
+    if (!args.contentId || !args.prefix || !args.name) {
       throw new McpError(
         ErrorCode.InvalidParams,
-        "pageId and label are required"
+        "contentId, prefix, and name are required"
       );
     }
 
-    const label = await client.addLabel(args.pageId, args.label);
+    if (args.prefix !== "global") {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        "prefix must be 'global'"
+      );
+    }
+
+    const label = await client.addLabel(args.contentId, args.prefix, args.name);
     const simplified = {
       success: true,
       id: label.id,

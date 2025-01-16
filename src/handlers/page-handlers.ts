@@ -1,10 +1,16 @@
 import { ConfluenceClient } from "../client/confluence-client.js";
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
-import type { Page, PaginatedResponse } from "../types/index.js";
+import type { Page } from "../types/index.js";
 
 export async function handleListPages(
   client: ConfluenceClient,
-  args: { spaceId: string; limit?: number; start?: number }
+  args: {
+    spaceId: string;
+    limit?: number;
+    cursor?: string;
+    sort?: 'created-date' | '-created-date' | 'modified-date' | '-modified-date' | 'title' | '-title';
+    status?: 'current' | 'archived' | 'draft' | 'trashed';
+  }
 ): Promise<{
   content: Array<{ type: "text"; text: string }>;
 }> {
@@ -13,22 +19,34 @@ export async function handleListPages(
       throw new McpError(ErrorCode.InvalidParams, "spaceId is required");
     }
 
-    const pages = await client.getPages(args.spaceId, args.limit, args.start);
+    const pages = await client.getPages(args.spaceId, {
+      limit: args.limit,
+      cursor: args.cursor,
+      sort: args.sort,
+      status: args.status
+    });
+    
     const simplified = {
       results: pages.results.map(page => ({
         id: page.id,
         title: page.title,
         spaceId: page.spaceId,
         version: page.version.number,
-        parentId: page.parentId || null
+        parentId: page.parentId || null,
+        status: page.status.value,
+        _links: page._links
       })),
-      next: pages._links.next ? true : false
+      cursor: pages._links.next?.split('cursor=')[1],
+      limit: pages.limit,
+      size: pages.size,
+      hasMore: !!pages._links.next
     };
+
     return {
       content: [
         {
           type: "text",
-          text: JSON.stringify(simplified),
+          text: JSON.stringify(simplified, null, 2),
         },
       ],
     };
@@ -53,7 +71,6 @@ export async function handleGetPage(
     }
 
     const page = await client.getPage(args.pageId);
-    const content = await client.getPageContent(args.pageId);
     
     const simplified = {
       id: page.id,
@@ -61,7 +78,8 @@ export async function handleGetPage(
       spaceId: page.spaceId,
       version: page.version.number,
       parentId: page.parentId || null,
-      content: content,
+      content: page.body.storage,
+      status: page.status.value,
       url: page._links.webui
     };
 
@@ -69,7 +87,7 @@ export async function handleGetPage(
       content: [
         {
           type: "text",
-          text: JSON.stringify(simplified),
+          text: JSON.stringify(simplified, null, 2),
         },
       ],
     };
@@ -108,7 +126,9 @@ export async function handleCreatePage(
 
     const simplified = {
       id: page.id,
+      title: page.title,
       version: page.version.number,
+      status: page.status.value,
       url: page._links.webui
     };
 
@@ -116,7 +136,7 @@ export async function handleCreatePage(
       content: [
         {
           type: "text",
-          text: JSON.stringify(simplified),
+          text: JSON.stringify(simplified, null, 2),
         },
       ],
     };
@@ -155,7 +175,9 @@ export async function handleUpdatePage(
 
     const simplified = {
       id: page.id,
+      title: page.title,
       version: page.version.number,
+      status: page.status.value,
       url: page._links.webui
     };
 
@@ -163,7 +185,7 @@ export async function handleUpdatePage(
       content: [
         {
           type: "text",
-          text: JSON.stringify(simplified),
+          text: JSON.stringify(simplified, null, 2),
         },
       ],
     };

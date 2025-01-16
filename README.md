@@ -45,13 +45,14 @@ The server can be integrated with MCP-compatible AI assistants by adding it to t
       "command": "node",
       "args": ["path/to/build/index.js"],
       "env": {
-        "CONFLUENCE_HOST": "your-domain.atlassian.net",
-        "CONFLUENCE_USERNAME": "your-email@domain.com",
+        "CONFLUENCE_DOMAIN”: "your-domain.atlassian.net",
+        "CONFLUENCE_EMAIL”: "your-email@domain.com",
         "CONFLUENCE_API_TOKEN": "your-api-token"
       }
     }
   }
 }
+
 ```
 
 ## Available Tools
