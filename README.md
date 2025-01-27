@@ -1,4 +1,5 @@
 # Confluence MCP Server
+[![smithery badge](https://smithery.ai/badge/confluence-cloud)](https://smithery.ai/server/confluence-cloud)
 
 A Model Context Protocol (MCP) server that provides tools for interacting with Confluence Cloud. This server enables AI assistants to manage Confluence spaces, pages, and content through a standardized interface.
 
@@ -17,6 +18,15 @@ A Model Context Protocol (MCP) server that provides tools for interacting with C
 
 ## Setup
 
+### Installing via Smithery
+
+To install Confluence Cloud for Claude Desktop automatically via [Smithery](https://smithery.ai/server/confluence-cloud):
+
+```bash
+npx -y @smithery/cli install confluence-cloud --client claude
+```
+
+### Manual Installation
 1. Install dependencies:
 ```bash
 npm install
