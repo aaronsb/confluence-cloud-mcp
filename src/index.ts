@@ -46,7 +46,7 @@ class ConfluenceServer {
   private server!: Server;
   private confluenceClient!: ConfluenceClient;
 
-  private async initialize() {
+  public async initialize() {
     console.error("Loading tool schemas...");
     console.error("Available schemas:", Object.keys(toolSchemas));
 
@@ -73,20 +73,20 @@ class ConfluenceServer {
     console.error("Initializing server with tools:", JSON.stringify(tools, null, 2));
 
     this.server = new Server(
-      {
-        name: "confluence-cloud",
-        version: "0.1.0",
-      },
-      {
-        capabilities: {
-          tools: {
-            schemas: tools,
-          },
-          resources: {
-            schemas: [], // Explicitly define empty resources
-          },
+        {
+          name: "confluence-cloud",
+          version: "0.1.0",
         },
-      }
+        {
+          capabilities: {
+            tools: {
+              schemas: tools,
+            },
+            resources: {
+              schemas: [], // Explicitly define empty resources
+            },
+          },
+        }
     );
 
     this.confluenceClient = new ConfluenceClient({
@@ -98,7 +98,7 @@ class ConfluenceServer {
     try {
       // Verify API connection - will throw an error if verification fails
       await this.confluenceClient.verifyApiConnection();
-      
+
       // Connection verification is already logged in the client
     } catch (error) {
       console.error("API verification failed:", error);
@@ -115,11 +115,7 @@ class ConfluenceServer {
   }
 
   constructor() {
-    // Initialize asynchronously
-    this.initialize().catch(error => {
-      console.error("Failed to initialize server:", error);
-      process.exit(1);
-    });
+
   }
 
   private setupHandlers() {
@@ -132,8 +128,8 @@ class ConfluenceServer {
           type: "object",
           properties: schema.inputSchema.properties,
           ...("required" in schema.inputSchema
-            ? { required: schema.inputSchema.required }
-            : {}),
+              ? { required: schema.inputSchema.required }
+              : {}),
         },
       })),
     }));
@@ -148,21 +144,21 @@ class ConfluenceServer {
 
     this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
       throw new McpError(
-        ErrorCode.InvalidRequest,
-        `No resources available: ${request.params.uri}`
+          ErrorCode.InvalidRequest,
+          `No resources available: ${request.params.uri}`
       );
     });
 
     // Set up tool handlers
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       console.error('Received request:', JSON.stringify(request, null, 2));
-      
+
       const { name, arguments: args } = request.params;
       console.error(`Handling tool request: ${name}`);
 
       try {
         switch (name) {
-          // Space operations
+            // Space operations
           case "list_confluence_spaces": {
             const { limit, start } = (args || {}) as { limit?: number; start?: number };
             return await handleListConfluenceSpaces(this.confluenceClient, { limit, start });
@@ -173,7 +169,7 @@ class ConfluenceServer {
             return await handleGetConfluenceSpace(this.confluenceClient, { spaceId });
           }
 
-          // Page operations
+            // Page operations
           case "list_confluence_pages": {
             const { spaceId, limit, start } = (args || {}) as { spaceId: string; limit?: number; start?: number };
             if (!spaceId) throw new McpError(ErrorCode.InvalidParams, "spaceId is required");
@@ -190,11 +186,11 @@ class ConfluenceServer {
             return await handleFindConfluencePage(this.confluenceClient, { title, spaceId });
           }
           case "create_confluence_page": {
-            const { spaceId, title, content, parentId } = (args || {}) as { 
-              spaceId: string; 
-              title: string; 
-              content: string; 
-              parentId?: string 
+            const { spaceId, title, content, parentId } = (args || {}) as {
+              spaceId: string;
+              title: string;
+              content: string;
+              parentId?: string
             };
             if (!spaceId || !title || !content) {
               throw new McpError(ErrorCode.InvalidParams, "spaceId, title, and content are required");
@@ -214,18 +210,18 @@ class ConfluenceServer {
             return await handleUpdateConfluencePage(this.confluenceClient, { pageId, title, content, version });
           }
 
-          // Search operation
+            // Search operation
           case "search_confluence_pages": {
-            const { query, limit, start } = (args || {}) as { 
-              query: string; 
-              limit?: number; 
-              start?: number 
+            const { query, limit, start } = (args || {}) as {
+              query: string;
+              limit?: number;
+              start?: number
             };
             if (!query) throw new McpError(ErrorCode.InvalidParams, "query is required");
             return await handleSearchConfluencePages(this.confluenceClient, { query, limit, start });
           }
 
-          // Label operations
+            // Label operations
           case "get_confluence_labels": {
             const { pageId } = (args || {}) as { pageId: string };
             if (!pageId) throw new McpError(ErrorCode.InvalidParams, "pageId is required");
@@ -251,8 +247,8 @@ class ConfluenceServer {
           throw error;
         }
         throw new McpError(
-          ErrorCode.InternalError,
-          `Internal server error: ${error instanceof Error ? error.message : String(error)}`
+            ErrorCode.InternalError,
+            `Internal server error: ${error instanceof Error ? error.message : String(error)}`
         );
       }
     });
@@ -265,5 +261,16 @@ class ConfluenceServer {
   }
 }
 
-const server = new ConfluenceServer();
-server.run().catch(console.error);
+(async () => {
+  const server = new ConfluenceServer();
+  try {
+    // Register tools etc.
+    await server.initialize();
+
+    // Run the server
+    await server.run();
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
+})();
