@@ -4,6 +4,8 @@ A Model Context Protocol (MCP) server that provides tools for interacting with C
 
 [![CI/CD Pipeline](https://github.com/aaronsb/confluence-cloud-mcp/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/aaronsb/confluence-cloud-mcp/actions/workflows/ci-cd.yml)
 
+<a href="https://glama.ai/mcp/servers/mp9zjz01wb"><img width="380" height="200" src="https://glama.ai/mcp/servers/mp9zjz01wb/badge" alt="Confluence Server MCP server" /></a>
+
 ## Features
 
 - Space Management
