@@ -10,6 +10,9 @@ import {
   McpError,
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { config } from "dotenv";
+import { resolve } from "path";
+import { existsSync } from "fs";
 
 import { ConfluenceClient } from "./client/confluence-client.js";
 import {
@@ -28,6 +31,23 @@ import {
 import { handleGetConfluenceSpace, handleListConfluenceSpaces } from "./handlers/space-handlers.js";
 import { toolSchemas } from "./schemas/tool-schemas.js";
 
+// Parse command line arguments
+const args = process.argv.slice(2);
+const envFileIndex = args.indexOf('--env');
+if (envFileIndex !== -1 && envFileIndex + 1 < args.length) {
+  const envFilePath = resolve(args[envFileIndex + 1]);
+  if (existsSync(envFilePath)) {
+    config({ path: envFilePath });
+    console.error(`Loaded environment variables from: ${envFilePath}`);
+  } else {
+    console.error(`Environment file not found: ${envFilePath}`);
+    process.exit(1);
+  }
+} else {
+  // Try to load default .env file if no --env argument provided
+  config();
+}
+
 // Required environment variables
 const requiredEnvVars = [
   "CONFLUENCE_DOMAIN",
@@ -38,7 +58,13 @@ const requiredEnvVars = [
 // Validate environment variables
 for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {
-    throw new Error(`Missing required environment variable: ${envVar}`);
+    console.error(`Missing required environment variable: ${envVar}`);
+    console.error(`Usage: npx confluence-cloud-mcp [--env /path/to/.env]`);
+    console.error(`Required environment variables:`);
+    console.error(`  CONFLUENCE_DOMAIN=your-domain.atlassian.net`);
+    console.error(`  CONFLUENCE_EMAIL=your@email.com`);
+    console.error(`  CONFLUENCE_API_TOKEN=your-api-token`);
+    process.exit(1);
   }
 }
 

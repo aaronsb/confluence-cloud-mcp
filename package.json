@@ -1,11 +1,11 @@
 {
-  "name": "confluence-cloud",
+  "name": "confluence-cloud-mcp",
   "version": "1.10.1",
   "description": "A Model Context Protocol Server for Atlassian Confluence Cloud",
-  "private": true,
+  "private": false,
   "type": "module",
   "bin": {
-    "confluence-cloud": "./build/index.js"
+    "confluence-cloud-mcp": "./build/index.js"
   },
   "files": [
     "build"

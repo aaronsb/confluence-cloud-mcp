@@ -48,7 +48,29 @@ cd confluence-cloud-mcp
 CONFLUENCE_API_TOKEN=your-token CONFLUENCE_EMAIL=your-email ./scripts/run-local.sh
 ```
 
-### Option 3: From Source
+### Option 3: Using npx (Direct from GitHub)
+
+Run directly from GitHub without installation:
+
+```bash
+# With inline environment variables
+CONFLUENCE_DOMAIN=your-domain.atlassian.net \
+CONFLUENCE_EMAIL=your-email@domain.com \
+CONFLUENCE_API_TOKEN=your-api-token \
+npx github:aaronsb/confluence-cloud-mcp
+
+# Or with an environment file
+npx github:aaronsb/confluence-cloud-mcp --env /path/to/.env
+```
+
+Create a `.env` file with your Confluence credentials:
+```
+CONFLUENCE_DOMAIN=your-domain.atlassian.net
+CONFLUENCE_EMAIL=your-email@domain.com
+CONFLUENCE_API_TOKEN=your-api-token
+```
+
+### Option 4: From Source
 
 1. Install dependencies:
 ```bash
@@ -77,6 +99,21 @@ node build/index.js
 
 The server can be integrated with MCP-compatible AI assistants by adding it to their MCP configuration:
 
+**Using npx (recommended):**
+```json
+{
+  "mcpServers": {
+    "confluence": {
+      "command": "npx",
+      "args": ["github:aaronsb/confluence-cloud-mcp", "--env", "/path/to/.env"],
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
+```
+
+**Using Docker:**
 ```json
 {
   "mcpServers": {
