@@ -99,7 +99,12 @@ node build/index.js
 
 The server can be integrated with MCP-compatible AI assistants by adding it to their MCP configuration:
 
-**Using npx (recommended):**
+**Using Claude Code CLI:**
+```bash
+claude mcp add confluence-cloud npx -- github:aaronsb/confluence-cloud-mcp --env /path/to/.env
+```
+
+**Using npx in MCP configuration:**
 ```json
 {
   "mcpServers": {
